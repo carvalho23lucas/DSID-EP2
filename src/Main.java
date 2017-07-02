@@ -66,11 +66,13 @@ public class Main {
 
         switch (funcao) {
         case 1:
-        case 2:
-          val.set(v + "\t" + c);
+          val.set(v + " " + c);
           break;
+        case 2:
+          // desv padr
+          // break;
         default:
-          val.set(v + "\t" + c); // TODO: implementar min quadrados aqui
+          val.set(v + " " + c); // TODO: implementar min quadrados aqui
           break;
         }
 
@@ -98,9 +100,9 @@ public class Main {
 
       for (Text value : values) {
         String tuple = value.toString();
-        int count = Integer.parseInt(tuple.split("\t")[1]);
+        int count = Integer.parseInt(tuple.split(" ")[1]);
         c += count;
-        v += Double.parseDouble(tuple.split("\t")[0]) * count;
+        v += Double.parseDouble(tuple.split(" ")[0]) * count;
       }
 
       group.set(key.get());
