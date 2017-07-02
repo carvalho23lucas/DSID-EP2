@@ -51,30 +51,25 @@ public class UserInterfaceFrame {
 	private void initialize() {
 		frame = new JFrame();
 		//frame.setBounds(100, 100, 450, 300);
-	    int frameWidth = 200;
-	    int frameHeight = 100;
+	    int frameWidth = 600;
+	    int frameHeight = 350;
 	    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setBounds((int) screenSize.getWidth() - frameWidth, 0, frameWidth, frameHeight);
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		
-
-		JButton btnMostrar = new JButton("Mostrar");
-		btnMostrar.setBounds(12, 210, 117, 25);
-		frame.getContentPane().add(btnMostrar);
-		
 		JComboBox cmbVariavel = new JComboBox(Variavel.values());
-		cmbVariavel.setBounds(12, 46, 117, 24);
+		cmbVariavel.setBounds(12, 46, 167, 24);
 		frame.getContentPane().add(cmbVariavel);
 		
 		JComboBox<Integer> cmbAnoIni = new JComboBox<Integer>();
-		cmbAnoIni.setBounds(12, 101, 58, 24);
+		cmbAnoIni.setBounds(12, 101, 70, 24);
 		populateComboBoxAnos(cmbAnoIni);
 		frame.getContentPane().add(cmbAnoIni);
 		
 		JComboBox<Integer> cmbAnoFinal = new JComboBox<Integer>();
-		cmbAnoFinal.setBounds(71, 101, 58, 24);
+		cmbAnoFinal.setBounds(109, 101, 70, 24);
 		populateComboBoxAnos(cmbAnoFinal);
 		frame.getContentPane().add(cmbAnoFinal);
 		
@@ -93,25 +88,48 @@ public class UserInterfaceFrame {
 		
 		JComboBox cmbAgrupamento = new JComboBox(Agrupamento.values());
 		lblAgruparPor.setLabelFor(cmbAgrupamento);
-		cmbAgrupamento.setBounds(12, 164, 117, 24);
+		cmbAgrupamento.setBounds(12, 164, 167, 24);
 		frame.getContentPane().add(cmbAgrupamento);
 		
 		JPanel pnlGrafico = new JPanel();
 		pnlGrafico.setBackground(Color.GRAY);
-		pnlGrafico.setBounds(147, 46, 276, 189);
+		pnlGrafico.setBounds(191, 46, 397, 252);
 		frame.getContentPane().add(pnlGrafico);
 		
 		JLabel lblLblvariaveis = new JLabel("");
 		pnlGrafico.add(lblLblvariaveis);
 		
-		eFormat.format("{0}-{1}", cmbAnoIni.getSelectedItem().toString(), cmbAnoFinal.getSelectedItem().toString());
+		JLabel lblFuncao = new JLabel("Função");
+		lblFuncao.setBounds(12, 200, 70, 15);
+		frame.getContentPane().add(lblFuncao);	
+		
+		JComboBox cmbFuncao = new JComboBox(Funcao.values());
+		lblFuncao.setLabelFor(cmbFuncao);
+		cmbFuncao.setBounds(12, 214, 167, 24);
+		frame.getContentPane().add(cmbFuncao);
+		
+		JButton btnMostrar = new JButton("Mostrar");
+		btnMostrar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String sPeriodo = MessageFormat.format("{0}-{1}", cmbAnoIni.getSelectedItem().toString(), cmbAnoFinal.getSelectedItem().toString());
 				Variavel var = (Variavel) cmbVariavel.getSelectedItem();
+				Funcao funcao = (Funcao) cmbFuncao.getSelectedItem();
 				Agrupamento agrupamento = (Agrupamento) cmbAgrupamento.getSelectedItem();
-				lblLblvariaveis.setText(MessageFormat.format("{0} {1} {2}",
-						var.name(), sPeriodo, agrupamento.getCodigo()));
+				lblLblvariaveis.setText(MessageFormat.format("{0} {1} {2} {3}",
+						var.name(), sPeriodo, agrupamento.getCodigo(), funcao.name()));
 			}
 		});
+		btnMostrar.setBounds(12, 246, 167, 25);
+		frame.getContentPane().add(btnMostrar);
+		
+		JLabel lblA = new JLabel("a");
+		lblA.setBounds(88, 101, 24, 30);
+		frame.getContentPane().add(lblA);
+		
+		
+
 	}
+	
 	void populateComboBoxAnos(JComboBox<Integer> jcbbAno) {
 		for(int i=1900;i<2018;i++) {
 			jcbbAno.addItem(i);
