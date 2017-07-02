@@ -122,20 +122,19 @@ public class UserInterfaceFrame {
 				String sArgumentos = MessageFormat.format("{0} {1} {2} {3}",
 						variavel.name(), sPeriodo, agrupamento.getCodigo(), funcao.name());
 				lblVariaveis.setText(sArgumentos);
-				List<String> comandos = new ArrayList<String>();
+				
 			    
 				try {
-				    comandos.add("/usr/local/hadoop/bin/hdfs dfs -rm -r /user/" + System.getenv("NOMEDEUSUARIO") + "/output/");
-				    comandos.add("/usr/local/hadoop/bin/hadoop jar main.jar Main " + sArgumentos);
-
-
-				    ProcessBuilder processBuilder = new ProcessBuilder(comandos);
-				    
-				    final Process process = processBuilder.start();
+					String comando1 = "/usr/local/hadoop/bin/hdfs dfs -rm -r /user/" + System.getenv("NOMEDEUSUARIO") + "/output/"; 
+					String comando2 = "/usr/local/hadoop/bin/hadoop jar main.jar Main " + sArgumentos;
 					
-				} catch (IOException e) {
+					runProcess(comandoToList(comando1));
+					runProcess(comandoToList(comando2));
+					JOptionPane.showMessageDialog(frame, "Programa Executado!");
+				    
+				} catch (Exception e) {
 					e.printStackTrace();
-					JOptionPane.showMessageDialog(frame, "Erro ao executar programa. "+ comandos.toString());
+					JOptionPane.showMessageDialog(frame, "Erro ao executar programa. ");
 				}
 			}
 		});
@@ -151,5 +150,18 @@ public class UserInterfaceFrame {
 		for(int i=1900;i<2018;i++) {
 			jcbbAno.addItem(i);
 		}
+	}
+	void runProcess(List<String> comandos) throws IOException,InterruptedException{
+		ProcessBuilder processBuilder = new ProcessBuilder(comandos);
+	    System.out.println(comandos);
+	    final Process process = processBuilder.start();
+	    process.waitFor();
+	}
+	List<String> comandoToList(String comando){
+		List<String> comandos = new ArrayList<String>();
+		for(String s : comando.split("\\s+")) {
+			comandos.add(s);
+		}
+		return comandos;
 	}
 }
