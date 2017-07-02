@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+import java.awt.Toolkit;
 
 import javax.swing.JFrame;import javax.swing.event.ListDataListener;
 import javax.swing.plaf.LabelUI;
@@ -10,6 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Dialog;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.MessageFormat;
@@ -48,7 +50,12 @@ public class UserInterfaceFrame {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 450, 300);
+		//frame.setBounds(100, 100, 450, 300);
+	    int frameWidth = 200;
+	    int frameHeight = 100;
+	    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		frame.setBounds((int) screenSize.getWidth() - frameWidth, 0, frameWidth, frameHeight);
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		
@@ -97,13 +104,11 @@ public class UserInterfaceFrame {
 		JLabel lblLblvariaveis = new JLabel("");
 		pnlGrafico.add(lblLblvariaveis);
 		
-		btnMostrar.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				String sPeriodo = MessageFormat.format("{0}-{1}", cmbAnoIni.getSelectedItem().toString(), cmbAnoFinal.getSelectedItem().toString());
+		eFormat.format("{0}-{1}", cmbAnoIni.getSelectedItem().toString(), cmbAnoFinal.getSelectedItem().toString());
 				Variavel var = (Variavel) cmbVariavel.getSelectedItem();
 				Agrupamento agrupamento = (Agrupamento) cmbAgrupamento.getSelectedItem();
 				lblLblvariaveis.setText(MessageFormat.format("{0} {1} {2}",
-						var.name(), sPeriodo, agrupamento.codigo));
+						var.name(), sPeriodo, agrupamento.getCodigo()));
 			}
 		});
 	}
@@ -111,22 +116,5 @@ public class UserInterfaceFrame {
 		for(int i=1900;i<2018;i++) {
 			jcbbAno.addItem(i);
 		}
-	}
-
-	
-	public enum Agrupamento{
-		ANO(3, "Ano"),MES(2, "Mês"),
-		DIA(1, "Dia da semana");
-		
-		private int codigo;
-		private String displayName;
-
-		
-		Agrupamento(int codigo, String displayName){
-			this.codigo = codigo;
-			this.displayName = displayName;
-		}
-		
-		@Override public String toString() { return displayName; }
 	}
 }
