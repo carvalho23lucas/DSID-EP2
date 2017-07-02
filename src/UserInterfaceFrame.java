@@ -8,12 +8,14 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -96,8 +98,8 @@ public class UserInterfaceFrame {
 		pnlGrafico.setBounds(191, 46, 397, 252);
 		frame.getContentPane().add(pnlGrafico);
 		
-		JLabel lblLblvariaveis = new JLabel("");
-		pnlGrafico.add(lblLblvariaveis);
+		JLabel lblVariaveis = new JLabel("");
+		pnlGrafico.add(lblVariaveis);
 		
 		JLabel lblFuncao = new JLabel("Função");
 		lblFuncao.setBounds(12, 200, 70, 15);
@@ -112,11 +114,20 @@ public class UserInterfaceFrame {
 		btnMostrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String sPeriodo = MessageFormat.format("{0}-{1}", cmbAnoIni.getSelectedItem().toString(), cmbAnoFinal.getSelectedItem().toString());
-				Variavel var = (Variavel) cmbVariavel.getSelectedItem();
+				Variavel variavel = (Variavel) cmbVariavel.getSelectedItem();
 				Funcao funcao = (Funcao) cmbFuncao.getSelectedItem();
 				Agrupamento agrupamento = (Agrupamento) cmbAgrupamento.getSelectedItem();
-				lblLblvariaveis.setText(MessageFormat.format("{0} {1} {2} {3}",
-						var.name(), sPeriodo, agrupamento.getCodigo(), funcao.name()));
+				String sArgumentos = MessageFormat.format("{0} {1} {2} {3}",
+						variavel.name(), sPeriodo, agrupamento.getCodigo(), funcao.name());
+				lblVariaveis.setText(sArgumentos);
+				String sComando = "bin/hadoop jar main.jar Main " + sArgumentos;
+				try {
+					Process p = Runtime.getRuntime().exec(new String[]{
+							sComando});
+				} catch (IOException e) {
+					e.printStackTrace();
+					JOptionPane.showMessageDialog(frame, "Erro ao executar programa. "+ sComando);
+				}
 			}
 		});
 		btnMostrar.setBounds(12, 246, 167, 25);
@@ -125,9 +136,6 @@ public class UserInterfaceFrame {
 		JLabel lblA = new JLabel("a");
 		lblA.setBounds(88, 101, 24, 30);
 		frame.getContentPane().add(lblA);
-		
-		
-
 	}
 	
 	void populateComboBoxAnos(JComboBox<Integer> jcbbAno) {
