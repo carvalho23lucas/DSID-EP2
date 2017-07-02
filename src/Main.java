@@ -156,13 +156,6 @@ public class Main {
   }
 
   public static void main(String[] args) throws Exception {
-    Configuration conf = new Configuration();
-    Job job = Job.getInstance(conf, "job");
-
-    FileSystem hdfs = FileSystem.get(conf);
-    if (hdfs.exists(new Path("output")))
-      hdfs.delete(new Path("output"), true);
-
     int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
     int periodoIni = Integer.parseInt(args[1].split("-")[0]);
     int periodoFim = Integer.parseInt(args[1].split("-")[1]);
@@ -232,57 +225,83 @@ public class Main {
       break;
     }
 
+    switch (funcao) {
+    case 1:
+      System.exit(calculaMedia(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento) ? 0 : 1);
+      break;
+    case 2:
+      System.exit(calculaDesvioPadrao(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento) ? 0 : 1);
+      break;
+    case 3:
+      System.exit(calculaMinimosQuadrados(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento) ? 0 : 1);
+      break;
+    }
+  }
+
+  public static boolean calculaMedia(int posIni, int posFim, int countIni, int countFim, int periodoIni, int periodoFim, int agrupamento) throws Exception {
+    Configuration conf = new Configuration();
+    Job job = Job.getInstance(conf, "job");
+    FileSystem hdfs = FileSystem.get(conf);
+
+    if (hdfs.exists(new Path("output")))
+      hdfs.delete(new Path("output"), true);
+
     job.setJarByClass(Main.class);
     job.setMapperClass(LineMapper.class);
-    if (funcao == 1)
-      job.setCombinerClass(FinalReducer.class);
+    job.setCombinerClass(FinalReducer.class);
     job.setReducerClass(FinalReducer.class);
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(Text.class);
-
+    
     job.getConfiguration().setInt("pos.ini", posIni);
     job.getConfiguration().setInt("pos.fim", posFim);
     job.getConfiguration().setInt("count.ini", countIni);
     job.getConfiguration().setInt("count.fim", countFim);
     job.getConfiguration().setInt("agrupamento", agrupamento);
-    job.getConfiguration().setInt("funcao", funcao == 2 ? 1 : funcao);
+    job.getConfiguration().setInt("funcao", 1);
 
     for (int i = periodoIni; i <= periodoFim; i++) {
       FileInputFormat.addInputPath(job, new Path("input/" + i));
     }
     FileOutputFormat.setOutputPath(job, new Path("output"));
 
-    boolean finished = job.waitForCompletion(true);
+    return job.waitForCompletion(true);
+  }
 
-    if (funcao == 2) {
-      Job job2 = Job.getInstance(conf, "job2");
+  public static boolean calculaDesvioPadrao(int posIni, int posFim, int countIni, int countFim, int periodoIni, int periodoFim, int agrupamento) throws Exception {
+    Configuration conf = new Configuration();
+    Job job = Job.getInstance(conf, "job2");
+    FileSystem hdfs = FileSystem.get(conf);
 
-      hdfs.moveToLocalFile(new Path("output/part-r-00000"), new Path("/usr/local/hadoop/output"));
-      hdfs.moveFromLocalFile(new Path("/usr/local/hadoop/output"), new Path("input/part-r-00000"));
-      hdfs.delete(new Path("output"), true);
+    calculaMedia(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento);
+    
+    hdfs.moveToLocalFile(new Path("output/part-r-00000"), new Path("/usr/local/hadoop/output"));
+    hdfs.moveFromLocalFile(new Path("/usr/local/hadoop/output"), new Path("input/part-r-00000"));
+    hdfs.delete(new Path("output"), true);
 
-      job2.getConfiguration().setInt("pos.ini", posIni);
-      job2.getConfiguration().setInt("pos.fim", posFim);
-      job2.getConfiguration().setInt("count.ini", countIni);
-      job2.getConfiguration().setInt("count.fim", countFim);
-      job2.getConfiguration().setInt("agrupamento", agrupamento);
-      job2.getConfiguration().setInt("funcao", funcao);
+    job.getConfiguration().setInt("pos.ini", posIni);
+    job.getConfiguration().setInt("pos.fim", posFim);
+    job.getConfiguration().setInt("count.ini", countIni);
+    job.getConfiguration().setInt("count.fim", countFim);
+    job.getConfiguration().setInt("agrupamento", agrupamento);
+    job.getConfiguration().setInt("funcao", 2);
 
-      job2.setJarByClass(Main.class);
-      job2.setMapperClass(LineMapper.class);
-      job2.setReducerClass(FinalReducer.class);
-      job2.setOutputKeyClass(IntWritable.class);
-      job2.setOutputValueClass(Text.class);
-      job2.addCacheFile(new Path("input/part-r-00000").toUri());
+    job.setJarByClass(Main.class);
+    job.setMapperClass(LineMapper.class);
+    job.setReducerClass(FinalReducer.class);
+    job.setOutputKeyClass(IntWritable.class);
+    job.setOutputValueClass(Text.class);
+    job.addCacheFile(new Path("input/part-r-00000").toUri());
 
-      for (int i = periodoIni; i <= periodoFim; i++) {
-        FileInputFormat.addInputPath(job2, new Path("input/" + i));
-      }
-      FileOutputFormat.setOutputPath(job2, new Path("output"));
-
-      finished = job2.waitForCompletion(true);
+    for (int i = periodoIni; i <= periodoFim; i++) {
+      FileInputFormat.addInputPath(job, new Path("input/" + i));
     }
+    FileOutputFormat.setOutputPath(job, new Path("output"));
 
-    System.exit(finished ? 0 : 1);
+    return job.waitForCompletion(true);
+  }
+
+  public static boolean calculaMinimosQuadrados(int posIni, int posFim, int countIni, int countFim, int periodoIni, int periodoFim, int agrupamento) throws Exception {
+    return false;
   }
 }
