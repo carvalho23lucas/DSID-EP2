@@ -39,8 +39,7 @@ public class Main {
 
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-      // skip header
-      if (key.get() == 0 && value.toString().contains("STN---"))
+      if (key.get() == 0 && value.toString().contains("STN---")) // skip header
         return;
 
       String line = value.toString();
@@ -71,7 +70,7 @@ public class Main {
           break;
         case 2:
           // desv padr
-          break;
+          // break;
         default:
           val.set(v + " " + c); // TODO: implementar min quadrados aqui
           break;
@@ -98,14 +97,17 @@ public class Main {
     @Override
     public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
       int c = 0, v = 0;
+
       for (Text value : values) {
         String tuple = value.toString();
         int count = Integer.parseInt(tuple.split(" ")[1]);
         c += count;
         v += Double.parseDouble(tuple.split(" ")[0]) * count;
       }
+
       group.set(key.get());
       val.set((v / c) + " " + c);
+
       context.write(group, val);
     }
   }
@@ -123,8 +125,8 @@ public class Main {
     int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
     int periodoIni = Integer.parseInt(args[1].split("-")[0]);
     int periodoFim = Integer.parseInt(args[1].split("-")[1]);
-    int agrupamento = Integer.parseInt(args[2]); // 1 = dia da semana, 2 = mes, 3 = ano
-    int funcao = Integer.parseInt(args[3]); // 1 = media, 2 = desvio padrão, 3 = minimos quadrados 
+    int agrupamento = Integer.parseInt(args[2]);
+    int funcao = Integer.parseInt(args[3]);
 
     switch (args[0]) {
     case "TEMP":
@@ -162,6 +164,30 @@ public class Main {
       posFim = 83;
       countIni = 84;
       countFim = 86;
+      break;
+    case "MXSPD":
+      posIni = 88;
+      posFim = 93;
+      break;
+    case "GUST":
+      posIni = 95;
+      posFim = 100;
+      break;
+    case "MAX":
+      posIni = 102;
+      posFim = 108;
+      break;
+    case "MIN":
+      posIni = 110;
+      posFim = 116;
+      break;
+    case "PRCP":
+      posIni = 118;
+      posFim = 123;
+      break;
+    case "SNDP":
+      posIni = 125;
+      posFim = 130;
       break;
     }
 
