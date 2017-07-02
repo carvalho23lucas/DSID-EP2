@@ -47,7 +47,7 @@ public class Main {
       int c = countFim == 0 ? 1 : Integer.parseInt(line.substring(countIni, countFim).trim());
       // verifica se o valor é 9999.99 ou se a quantidade de medições é 0
       if (!Pattern.matches("9*\\.?9*", line.substring(posIni, posFim)) && c != 0) {
-        double v = posFim == 0 ? 0.0 : Double.parseDouble(line.substring(posIni, posFim).trim());
+        double v = Double.parseDouble(line.substring(posIni, posFim).trim());
 
         DateFormat formatter = new SimpleDateFormat("yyyyMMdd");
         Calendar cal = Calendar.getInstance();
@@ -70,8 +70,10 @@ public class Main {
           val.set(v + " " + c);
           break;
         case 2:
+          // desv padr
+          break;
         default:
-          val.set(v + " " + c);
+          val.set(v + " " + c); // TODO: implementar min quadrados aqui
           break;
         }
 
@@ -84,6 +86,7 @@ public class Main {
     private Configuration conf;
     private int funcao;
 
+    private IntWritable group = new IntWritable();
     private Text val = new Text();
 
     @Override
@@ -97,11 +100,13 @@ public class Main {
       int c = 0, v = 0;
       for (Text value : values) {
         String tuple = value.toString();
-        c += Integer.parseInt(tuple.split(" ")[1]);
-        v += Double.parseDouble(tuple.split(" ")[0]) * c;
+        int count = Integer.parseInt(tuple.split(" ")[1]);
+        c += count;
+        v += Double.parseDouble(tuple.split(" ")[0]) * count;
       }
+      group.set(key.get());
       val.set((v / c) + " " + c);
-      context.write(key, val);
+      context.write(group, val);
     }
   }
 
@@ -116,10 +121,10 @@ public class Main {
     job.setOutputValueClass(Text.class);
 
     int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
-    int periodoIni = Integer.parseInt(args[1]);
-    int periodoFim = Integer.parseInt(args[2]);
-    int agrupamento = Integer.parseInt(args[3]); // 1 = dia da semana, 2 = mes, 3 = ano
-    int funcao = Integer.parseInt(args[4]); // 1 = media, 2 = desvio padrão, 3 = minimos quadrados 
+    int periodoIni = Integer.parseInt(args[1].split("-")[0]);
+    int periodoFim = Integer.parseInt(args[1].split("-")[1]);
+    int agrupamento = Integer.parseInt(args[2]); // 1 = dia da semana, 2 = mes, 3 = ano
+    int funcao = Integer.parseInt(args[3]); // 1 = media, 2 = desvio padrão, 3 = minimos quadrados 
 
     switch (args[0]) {
     case "TEMP":
