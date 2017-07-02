@@ -1,13 +1,17 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.regex.Pattern;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -88,46 +92,59 @@ public class Main {
     private IntWritable group = new IntWritable();
     private Text val = new Text();
 
+    private BufferedReader fis;
+    private Map<Integer, Double> meanList = new HashMap<Integer, Double>();
+
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
       conf = context.getConfiguration();
       funcao = conf.getInt("funcao", 1);
+      if (funcao == 2) {
+        URI[] patternsURIs = Job.getInstance(conf).getCacheFiles();
+        for (URI patternsURI : patternsURIs) {
+          Path path = new Path(patternsURI.getPath());
+          String fileName = path.getName().toString();
+          parseMeanFile(fileName);
+        }
+      }
+    }
+    private void parseMeanFile(String fileName) {
+      try {
+        fis = new BufferedReader(new FileReader(fileName));
+        String line = null;
+        while ((line = fis.readLine()) != null) {
+          meanList.put(Integer.parseInt(line.split("\t")[0]), Double.parseDouble(line.split("\t")[1]));
+        }
+      } catch (IOException ioe) { }
     }
 
     @Override
     public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
       int c = 0;
       double v = 0, result;
-      ArrayList<Text> cache = new ArrayList<Text>();
-
-      for (Text value : values) {
-        String tuple = value.toString();
-        int count = Integer.parseInt(tuple.split("\t")[1]);
-        c += count;
-        v += Double.parseDouble(tuple.split("\t")[0]) * count;
-        cache.add(value);
-      }
-      double mean = v / c;
 
       switch (funcao) {
       case 1:
-        result = mean;
+        for (Text value : values) {
+          String tuple = value.toString();
+          int count = Integer.parseInt(tuple.split("\t")[1]);
+          c += count;
+          v += Double.parseDouble(tuple.split("\t")[0]) * count;
+        }
+        result = v / c;
         break;
       case 2:
-        if (c > 1) {
-          v = 0;
-          result = 0;
-          for (Text value : cache) {
-            String tuple = value.toString();
-            v += Math.pow(Double.parseDouble(tuple.split("\t")[0]) - mean, 2);
-          }
-          result = Math.sqrt(v / (c - 1.0));
+        for (Text value : values) {
+          String tuple = value.toString();
+          int count = Integer.parseInt(tuple.split("\t")[1]);
+          c += count;
+          double mean = meanList.get(key.get());
+          v += Math.pow(Double.parseDouble(tuple.split("\t")[0]) - mean, 2);
         }
-        else
-          result = -1;
+        result = Math.sqrt(v / (c - 1.0));
         break;
       default:
-        result = mean; // TODO: implementar min quadrados aqui
+        result = 0; // TODO: implementar min quadrados aqui
         break;
       }
 
@@ -140,7 +157,11 @@ public class Main {
 
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
-    Job job = Job.getInstance(conf, "EP2");
+    Job job = Job.getInstance(conf, "job");
+
+    FileSystem hdfs = FileSystem.get(conf);
+    if (hdfs.exists(new Path("output")))
+      hdfs.delete(new Path("output"), true);
 
     int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
     int periodoIni = Integer.parseInt(args[1].split("-")[0]);
@@ -224,13 +245,44 @@ public class Main {
     job.getConfiguration().setInt("count.ini", countIni);
     job.getConfiguration().setInt("count.fim", countFim);
     job.getConfiguration().setInt("agrupamento", agrupamento);
-    job.getConfiguration().setInt("funcao", funcao);
+    job.getConfiguration().setInt("funcao", funcao == 2 ? 1 : funcao);
 
     for (int i = periodoIni; i <= periodoFim; i++) {
       FileInputFormat.addInputPath(job, new Path("input/" + i));
     }
     FileOutputFormat.setOutputPath(job, new Path("output"));
 
-    System.exit(job.waitForCompletion(true) ? 0 : 1);
+    boolean finished = job.waitForCompletion(true);
+
+    if (funcao == 2) {
+      Job job2 = Job.getInstance(conf, "job2");
+
+      hdfs.moveToLocalFile(new Path("output/part-r-00000"), new Path("/usr/local/hadoop/output"));
+      hdfs.moveFromLocalFile(new Path("/usr/local/hadoop/output"), new Path("input/part-r-00000"));
+      hdfs.delete(new Path("output"), true);
+
+      job2.getConfiguration().setInt("pos.ini", posIni);
+      job2.getConfiguration().setInt("pos.fim", posFim);
+      job2.getConfiguration().setInt("count.ini", countIni);
+      job2.getConfiguration().setInt("count.fim", countFim);
+      job2.getConfiguration().setInt("agrupamento", agrupamento);
+      job2.getConfiguration().setInt("funcao", funcao);
+
+      job2.setJarByClass(Main.class);
+      job2.setMapperClass(LineMapper.class);
+      job2.setReducerClass(FinalReducer.class);
+      job2.setOutputKeyClass(IntWritable.class);
+      job2.setOutputValueClass(Text.class);
+      job2.addCacheFile(new Path("input/part-r-00000").toUri());
+
+      for (int i = periodoIni; i <= periodoFim; i++) {
+        FileInputFormat.addInputPath(job2, new Path("input/" + i));
+      }
+      FileOutputFormat.setOutputPath(job2, new Path("output"));
+
+      finished = job2.waitForCompletion(true);
+    }
+
+    System.exit(finished ? 0 : 1);
   }
 }
