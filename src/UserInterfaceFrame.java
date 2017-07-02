@@ -123,6 +123,8 @@ public class UserInterfaceFrame {
 				String sComando = "bin/hadoop jar main.jar Main " + sArgumentos;
 				try {
 					Process p = Runtime.getRuntime().exec(new String[]{
+							"cd /usr/local/hadoop",
+							"bin/hdfs dfs -rm -r /user/$NOMEDEUSUARIO/output/",
 							sComando});
 				} catch (IOException e) {
 					e.printStackTrace();
