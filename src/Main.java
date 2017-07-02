@@ -156,89 +156,25 @@ public class Main {
   }
 
   public static void main(String[] args) throws Exception {
-    int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
     int periodoIni = Integer.parseInt(args[1].split("-")[0]);
     int periodoFim = Integer.parseInt(args[1].split("-")[1]);
     int agrupamento = Integer.parseInt(args[2]);
     int funcao = Integer.parseInt(args[3]);
 
-    switch (args[0]) {
-    case "TEMP":
-      posIni = 24;
-      posFim = 30;
-      countIni = 31;
-      countFim = 33;
-      break;
-    case "DEWP":
-      posIni = 35;
-      posFim = 41;
-      countIni = 42;
-      countFim = 44;
-      break;
-    case "SLP":
-      posIni = 46;
-      posFim = 52;
-      countIni = 53;
-      countFim = 55;
-      break;
-    case "STP":
-      posIni = 57;
-      posFim = 63;
-      countIni = 64;
-      countFim = 66;
-      break;
-    case "VISIB":
-      posIni = 68;
-      posFim = 73;
-      countIni = 74;
-      countFim = 76;
-      break;
-    case "WDSP":
-      posIni = 78;
-      posFim = 83;
-      countIni = 84;
-      countFim = 86;
-      break;
-    case "MXSPD":
-      posIni = 88;
-      posFim = 93;
-      break;
-    case "GUST":
-      posIni = 95;
-      posFim = 100;
-      break;
-    case "MAX":
-      posIni = 102;
-      posFim = 108;
-      break;
-    case "MIN":
-      posIni = 110;
-      posFim = 116;
-      break;
-    case "PRCP":
-      posIni = 118;
-      posFim = 123;
-      break;
-    case "SNDP":
-      posIni = 125;
-      posFim = 130;
-      break;
-    }
-
     switch (funcao) {
     case 1:
-      System.exit(calculaMedia(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento) ? 0 : 1);
+      System.exit(calculaMedia(new PosAndCount(args[0]), periodoIni, periodoFim, agrupamento) ? 0 : 1);
       break;
     case 2:
-      System.exit(calculaDesvioPadrao(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento) ? 0 : 1);
+      System.exit(calculaDesvioPadrao(new PosAndCount(args[0]), periodoIni, periodoFim, agrupamento) ? 0 : 1);
       break;
     case 3:
-      System.exit(calculaMinimosQuadrados(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento) ? 0 : 1);
+      System.exit(calculaMinimosQuadrados(new PosAndCount(args[0].split("-")[0]), new PosAndCount(args[0].split("-")[1]), periodoIni, periodoFim, agrupamento) ? 0 : 1);
       break;
     }
   }
 
-  public static boolean calculaMedia(int posIni, int posFim, int countIni, int countFim, int periodoIni, int periodoFim, int agrupamento) throws Exception {
+  public static boolean calculaMedia(PosAndCount pac, int periodoIni, int periodoFim, int agrupamento) throws Exception {
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "job");
     FileSystem hdfs = FileSystem.get(conf);
@@ -253,10 +189,10 @@ public class Main {
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(Text.class);
     
-    job.getConfiguration().setInt("pos.ini", posIni);
-    job.getConfiguration().setInt("pos.fim", posFim);
-    job.getConfiguration().setInt("count.ini", countIni);
-    job.getConfiguration().setInt("count.fim", countFim);
+    job.getConfiguration().setInt("pos.ini", pac.posIni);
+    job.getConfiguration().setInt("pos.fim", pac.posFim);
+    job.getConfiguration().setInt("count.ini", pac.countIni);
+    job.getConfiguration().setInt("count.fim", pac.countFim);
     job.getConfiguration().setInt("agrupamento", agrupamento);
     job.getConfiguration().setInt("funcao", 1);
 
@@ -268,21 +204,21 @@ public class Main {
     return job.waitForCompletion(true);
   }
 
-  public static boolean calculaDesvioPadrao(int posIni, int posFim, int countIni, int countFim, int periodoIni, int periodoFim, int agrupamento) throws Exception {
+  public static boolean calculaDesvioPadrao(PosAndCount pac, int periodoIni, int periodoFim, int agrupamento) throws Exception {
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "job2");
     FileSystem hdfs = FileSystem.get(conf);
 
-    calculaMedia(posIni, posFim, countIni, countFim, periodoIni, periodoFim, agrupamento);
+    calculaMedia(pac, periodoIni, periodoFim, agrupamento);
     
     hdfs.moveToLocalFile(new Path("output/part-r-00000"), new Path("/usr/local/hadoop/output"));
     hdfs.moveFromLocalFile(new Path("/usr/local/hadoop/output"), new Path("input/part-r-00000"));
     hdfs.delete(new Path("output"), true);
 
-    job.getConfiguration().setInt("pos.ini", posIni);
-    job.getConfiguration().setInt("pos.fim", posFim);
-    job.getConfiguration().setInt("count.ini", countIni);
-    job.getConfiguration().setInt("count.fim", countFim);
+    job.getConfiguration().setInt("pos.ini", pac.posIni);
+    job.getConfiguration().setInt("pos.fim", pac.posFim);
+    job.getConfiguration().setInt("count.ini", pac.countIni);
+    job.getConfiguration().setInt("count.fim", pac.countFim);
     job.getConfiguration().setInt("agrupamento", agrupamento);
     job.getConfiguration().setInt("funcao", 2);
 
@@ -301,7 +237,65 @@ public class Main {
     return job.waitForCompletion(true);
   }
 
-  public static boolean calculaMinimosQuadrados(int posIni, int posFim, int countIni, int countFim, int periodoIni, int periodoFim, int agrupamento) throws Exception {
+  public static boolean calculaMinimosQuadrados(PosAndCount pac1, PosAndCount pac2, int periodoIni, int periodoFim, int agrupamento) throws Exception {
     return false;
+  }
+
+  public static class PosAndCount {
+    public int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
+
+    public void set(int posIni, int posFim, int countIni, int countFim) {
+      this.posIni = posIni;
+      this.posFim = posFim;
+      this.countIni = countIni;
+      this.countFim = countFim;
+    }
+
+    public void set(int posIni, int posFim) {
+      this.posIni = posIni;
+      this.posFim = posFim;
+    }
+
+    public PosAndCount(String arg) {
+
+      switch (arg) {
+      case "TEMP":
+        set(24, 30, 31, 33);
+        break;
+      case "DEWP":
+        set(35, 41, 42, 44);
+        break;
+      case "SLP":
+        set(46, 52, 53, 55);
+        break;
+      case "STP":
+        set(57, 63, 64, 66);
+        break;
+      case "VISIB":
+        set(68, 73, 74, 76);
+        break;
+      case "WDSP":
+        set(78, 83, 84, 86);
+        break;
+      case "MXSPD":
+        set(88, 93);
+        break;
+      case "GUST":
+        set(95, 100);
+        break;
+      case "MAX":
+        set(102, 108);
+        break;
+      case "MIN":
+        set(110, 116);
+        break;
+      case "PRCP":
+        set(118, 123);
+        break;
+      case "SNDP":
+        set(125, 130);
+        break;
+      }
+    }
   }
 }
