@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+import java.util.List;
 import java.awt.Toolkit;
 
 import javax.swing.JFrame;import javax.swing.event.ListDataListener;
@@ -17,6 +18,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
@@ -120,15 +122,20 @@ public class UserInterfaceFrame {
 				String sArgumentos = MessageFormat.format("{0} {1} {2} {3}",
 						variavel.name(), sPeriodo, agrupamento.getCodigo(), funcao.name());
 				lblVariaveis.setText(sArgumentos);
-				String sComando = "bin/hadoop jar main.jar Main " + sArgumentos;
+				List<String> comandos = new ArrayList<String>();
+			    
 				try {
-					Process p = Runtime.getRuntime().exec(new String[]{
-							"cd /usr/local/hadoop",
-							"bin/hdfs dfs -rm -r /user/$NOMEDEUSUARIO/output/",
-							sComando});
+				    comandos.add("/usr/local/hadoop/bin/hdfs dfs -rm -r /user/" + System.getenv("NOMEDEUSUARIO") + "/output/");
+				    comandos.add("/usr/local/hadoop/bin/hadoop jar main.jar Main " + sArgumentos);
+
+
+				    ProcessBuilder processBuilder = new ProcessBuilder(comandos);
+				    
+				    final Process process = processBuilder.start();
+					
 				} catch (IOException e) {
 					e.printStackTrace();
-					JOptionPane.showMessageDialog(frame, "Erro ao executar programa. "+ sComando);
+					JOptionPane.showMessageDialog(frame, "Erro ao executar programa. "+ comandos.toString());
 				}
 			}
 		});
