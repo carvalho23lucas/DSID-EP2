@@ -3,7 +3,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -94,17 +96,43 @@ public class Main {
 
     @Override
     public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-      int c = 0, v = 0;
+      int c = 0;
+      double v = 0, result;
+      ArrayList<Text> cache = new ArrayList<Text>();
 
       for (Text value : values) {
         String tuple = value.toString();
         int count = Integer.parseInt(tuple.split("\t")[1]);
         c += count;
         v += Double.parseDouble(tuple.split("\t")[0]) * count;
+        cache.add(value);
+      }
+      double mean = v / c;
+
+      switch (funcao) {
+      case 1:
+        result = mean;
+        break;
+      case 2:
+        if (c > 1) {
+          v = 0;
+          result = 0;
+          for (Text value : cache) {
+            String tuple = value.toString();
+            v += Math.pow(Double.parseDouble(tuple.split("\t")[0]) - mean, 2);
+          }
+          result = Math.sqrt(v / (c - 1.0));
+        }
+        else
+          result = -1;
+        break;
+      default:
+        result = mean; // TODO: implementar min quadrados aqui
+        break;
       }
 
       group.set(key.get());
-      val.set((v / c) + "\t" + c);
+      val.set(result + "\t" + c);
 
       context.write(group, val);
     }
@@ -113,12 +141,6 @@ public class Main {
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "EP2");
-    job.setJarByClass(Main.class);
-    job.setMapperClass(LineMapper.class);
-    job.setCombinerClass(FinalReducer.class);
-    job.setReducerClass(FinalReducer.class);
-    job.setOutputKeyClass(IntWritable.class);
-    job.setOutputValueClass(Text.class);
 
     int posIni = 0, posFim = 0, countIni = 0, countFim = 0;
     int periodoIni = Integer.parseInt(args[1].split("-")[0]);
@@ -188,6 +210,14 @@ public class Main {
       posFim = 130;
       break;
     }
+
+    job.setJarByClass(Main.class);
+    job.setMapperClass(LineMapper.class);
+    if (funcao == 1)
+      job.setCombinerClass(FinalReducer.class);
+    job.setReducerClass(FinalReducer.class);
+    job.setOutputKeyClass(IntWritable.class);
+    job.setOutputValueClass(Text.class);
 
     job.getConfiguration().setInt("pos.ini", posIni);
     job.getConfiguration().setInt("pos.fim", posFim);
