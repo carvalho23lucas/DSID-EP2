@@ -103,7 +103,7 @@ public class UserInterfaceFrame {
 				Variavel var = (Variavel) cmbVariavel.getSelectedItem();
 				Agrupamento agrupamento = (Agrupamento) cmbAgrupamento.getSelectedItem();
 				lblLblvariaveis.setText(MessageFormat.format("{0} {1} {2}",
-						var.toString(), sPeriodo, agrupamento.toString()));
+						var.name(), sPeriodo, agrupamento.codigo));
 			}
 		});
 	}
@@ -112,11 +112,21 @@ public class UserInterfaceFrame {
 			jcbbAno.addItem(i);
 		}
 	}
-	public enum Variavel{
-		Temperatura,Umidade,Visibilidade
-	}
+
 	
 	public enum Agrupamento{
-		Ano,Mês,Semana,Dia
+		ANO(3, "Ano"),MES(2, "Mês"),
+		DIA(1, "Dia da semana");
+		
+		private int codigo;
+		private String displayName;
+
+		
+		Agrupamento(int codigo, String displayName){
+			this.codigo = codigo;
+			this.displayName = displayName;
+		}
+		
+		@Override public String toString() { return displayName; }
 	}
 }
