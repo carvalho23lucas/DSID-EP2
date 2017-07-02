@@ -5,7 +5,13 @@ public enum Variavel {
 	SLP("SLP"),
 	STP("STP"),
 	VISIB("Visibilidade"),
-	WDSP("WDSP");
+	WDSP("WDSP"),
+	MXSPD("MXSPD"),
+	GUST("GUST"),
+	MAX("MAX"),
+	MIN("MIN"),
+	PRCP("PRCP"),
+	SNDP("SNDP");
 	
 	private String displayName;
 	
