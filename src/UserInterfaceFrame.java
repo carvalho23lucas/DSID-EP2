@@ -120,12 +120,13 @@ public class UserInterfaceFrame {
 				Funcao funcao = (Funcao) cmbFuncao.getSelectedItem();
 				Agrupamento agrupamento = (Agrupamento) cmbAgrupamento.getSelectedItem();
 				String sArgumentos = MessageFormat.format("{0} {1} {2} {3}",
-						variavel.name(), sPeriodo, agrupamento.getCodigo(), funcao.name());
+						variavel.name(), sPeriodo, agrupamento.getCodigo(), funcao.getCodigo());
 				lblVariaveis.setText(sArgumentos);
 				
 			    
 				try {
-					String comando2 = "/usr/local/hadoop/bin/hadoop jar main.jar Main " + sArgumentos;
+					String comando1 = "cd /usr/local/hadoop";
+					String comando2 = "/usr/local/hadoop/bin/hadoop jar /usr/local/hadoop/main.jar Main " + sArgumentos;
 					
 					runProcess(comandoToList(comando2));
 					JOptionPane.showMessageDialog(frame, "Programa Executado!");
