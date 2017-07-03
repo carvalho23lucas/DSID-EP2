@@ -201,8 +201,10 @@ public class Main {
     }
     FileOutputFormat.setOutputPath(job, new Path("output"));
 
-    return job.waitForCompletion(true);
-  }
+    Boolean completed = job.waitForCompletion(true);
+    hdfs.copyToLocalFile(new Path("output/part-r-00000"), new Path("/usr/local/hadoop/output"));
+    return completed;
+    }
 
   public static boolean calculaDesvioPadrao(PosAndCount pac, int periodoIni, int periodoFim, int agrupamento) throws Exception {
     Configuration conf = new Configuration();
@@ -234,7 +236,9 @@ public class Main {
     }
     FileOutputFormat.setOutputPath(job, new Path("output"));
 
-    return job.waitForCompletion(true);
+    Boolean completed = job.waitForCompletion(true);
+    hdfs.copyToLocalFile(new Path("output/part-r-00000"), new Path("/usr/local/hadoop/output"));
+    return completed;
   }
 
   public static boolean calculaMinimosQuadrados(PosAndCount pac1, PosAndCount pac2, int periodoIni, int periodoFim, int agrupamento) throws Exception {
