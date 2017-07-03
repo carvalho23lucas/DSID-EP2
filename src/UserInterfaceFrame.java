@@ -4,6 +4,9 @@ import java.awt.Toolkit;
 
 import javax.swing.JFrame;import javax.swing.event.ListDataListener;
 import javax.swing.plaf.LabelUI;
+
+import org.jfree.ui.RefineryUtilities;
+
 import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -129,8 +132,14 @@ public class UserInterfaceFrame {
 					String comando2 = "/usr/local/hadoop/bin/hadoop jar /usr/local/hadoop/main.jar Main " + sArgumentos;
 					
 					runProcess(comandoToList(comando2));
-					JOptionPane.showMessageDialog(frame, "Programa Executado!");
+//					JOptionPane.showMessageDialog(frame, "Programa Executado!");
 				    
+					//	GRÁFICOS
+					LineChart chart = new LineChart(funcao.getCodigo(), agrupamento.getCodigo(), 2.0, 2.0, 1, 1000, 7, 1001);
+					chart.pack();          
+					RefineryUtilities.centerFrameOnScreen( chart );          
+					chart.setVisible( true );
+					////////
 				} catch (Exception e) {
 					e.printStackTrace();
 					JOptionPane.showMessageDialog(frame, "Erro ao executar programa. ");
