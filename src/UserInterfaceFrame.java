@@ -125,10 +125,8 @@ public class UserInterfaceFrame {
 				
 			    
 				try {
-					String comando1 = "/usr/local/hadoop/bin/hdfs dfs -rm -r /user/" + System.getenv("NOMEDEUSUARIO") + "/output/"; 
 					String comando2 = "/usr/local/hadoop/bin/hadoop jar main.jar Main " + sArgumentos;
 					
-					runProcess(comandoToList(comando1));
 					runProcess(comandoToList(comando2));
 					JOptionPane.showMessageDialog(frame, "Programa Executado!");
 				    

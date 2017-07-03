@@ -1,7 +1,7 @@
 
 public enum Funcao {
 	MEDIA(1, "Média"),
-	MEDIANA(2, "Mediana"),
+	MEDIANA(2, "Desvio Padrão"),
 	MMQ(3, "Método mín. quadrados");
 	
 	private int codigo;
